@@ -1,3 +1,3 @@
-# Summary
+# Note
 
-- [Chapter 1](./chapter_1.md)
+- [IPC](linux/ipc.md)
