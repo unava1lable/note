@@ -176,6 +176,7 @@ int sem_destroy (sem_t *sem);
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <wait.h>
 #include <sys/stat.h>
 #include <semaphore.h>
 
@@ -197,12 +198,31 @@ int main(void) {
     } else {
         printf("Always First\n");
         sem_post(sema);
-        sleep(1);
-        sem_wait(sema);
+        wait(NULL);
     }
     sem_close(sema);
     sem_unlink("/mysem");
     return 0;
 }
 ```
+
+### 共享内存
+POSIX共享内存能够让无关进程共享一个映射区域而无需创建一个相应的映射文件。
+
+要使用共享内存需要：
+1. 使用`shm_open()`打开一个共享内存对象。
+2. 将上一步获取的文件描述符传入mmap()，并在其`flags`参数中指定`MAP_SHARED`。
+#### API介绍
+```c
+// 打开一个共享内存对象
+// 出错时返回-1
+int shm_open (const char *name, int oflag, mode_t mode);
+
+
+// 删除一个共享内存对象
+// 出错时返回-1
+int shm_unlink (const char *name);
+```
+#### 示例
+
 ## 总结
