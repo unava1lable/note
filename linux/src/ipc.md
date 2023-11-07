@@ -3,6 +3,98 @@
 ## System V IPC
 ### System V IPC简介
 
+### 消息队列
+#### API介绍
+```c
+#include <sys/types.h>
+#include <sys/msg.h>
+
+struct msqid_ds {
+  struct ipc_perm msg_perm;	        /* ownership and permission */
+    time_t msg_stime;		        /* time of last msgsnd command */
+    time_t msg_rtime;		        /* time of last msgrcv command */
+    time_t msg_ctime;		        /* time of last change */
+    unsigned long __msg_cbytes;     /* current number of bytes on queue */
+    msgqnum_t msg_qnum;		        /* number of messages currently on queue */
+    msglen_t msg_qbytes;		    /* max number of bytes allowed on queue */
+    pid_t msg_lspid;		        /* pid of last msgsnd() */
+    pid_t msg_lrpid;		        /* pid of last msgrcv() */
+    unsigned long __glibc_reserved4;
+    unsigned long __glibc_reserved5;
+};
+
+
+// 创建一个新的消息队列或获取一个既有队列的标识符
+// key: IPC_PRIVATE或ftok()返回的一个键
+// msgflg: 权限，IPC_CREAT和IPC_EXCL
+// 出错时返回-1
+int msgget (key_t key, int msgflg);
+
+
+// 向消息队列写入一条消息
+// msgp: struct {
+//     long mtype;      消息类型，大于0
+//     char mtext[];    消息体
+// }
+// msgsz: mtext包含的字节数
+// msgflg: 目前只有IPC_NOWAIT
+// 出错时返回-1
+int msgsnd (int msqid, const void *msgp, size_t msgsz, int msgflg);
+
+// 从消息队列中读取并删除一条消息，并将内润复制到msgp指向的缓冲区中
+// msgtyp: == 0，删除并返回第一条消息
+//          > 0，删除并返回第一条msgtyp == mtype的消息
+//          < 0，将等待消息当成优先队列来处理。mtype最小并且 <= |msgtyp|的第一条消息会被删除并返回
+// 出错时返回-1
+ssize_t msgrcv (int msqid, void *msgp, size_t msgsz, long int msgtyp, int msgflg);
+
+// 执行控制操作
+// cmd: IPC_RMID，删除消息队列及msqid_ds。队列中所有消息都会丢失，所有被阻塞的读者和写者进程会立即醒来，忽略buf参数
+//      IPC_STAT，将与这个消息队列的msqid_ds数据结构的副本放到buf指向的缓冲区中
+//      IPC_SET，使用buf指向的缓冲区提供的值更新与这个消息队列关联的msqid_ds数据结构中被选中的字段
+// 出错时返回-1
+int msgctl (int msqid, int cmd, struct msqid_ds *buf);
+```
+
+#### 示例
+1. 基本使用
+```c
+#include <sys/types.h>
+#include <sys/msg.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct msg {
+    long mtype;
+    char mtext[16];
+};
+
+int main(void) {
+    struct msg m, q;
+    m.mtype = 1;
+    memcpy(m.mtext, "hello\n", 7);
+
+    int f = msgget(IPC_PRIVATE, S_IRUSR | S_IWUSR | IPC_CREAT);
+    if (f < 0) {
+        printf("get error\n");
+        exit(1);
+    }
+
+    msgsnd(f, &m, 7, IPC_NOWAIT);
+    msgrcv(f, &q, 100, 1, 0);
+
+    printf("%s", q.mtext);
+
+    return 0;
+}
+```
+
+### 信号量
+#### API介绍
+
+
 ## POSIX IPC
 ### POSIX IPC简介
 
