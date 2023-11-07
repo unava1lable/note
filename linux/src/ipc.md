@@ -93,7 +93,95 @@ int main(void) {
 
 ### 信号量
 #### API介绍
+```c
+#include <sys/types.h>
+#include <sys/sem.h>
 
+struct semid_ds {
+    struct ipc_perm sem_perm;           /* operation permission struct */
+    time_t sem_otime;                   /* last semop() time */
+    unsigned long __sem_otime_high;
+    time_t sem_ctime;                   /* last time changed by semctl() */
+    unsigned long __sem_ctime_high;
+    unsigned long sem_nsems;            /* number of semaphores in set */
+    unsigned long __glibc_reserved3;
+    unsigned long __glibc_reserved4;
+};
+
+struct sembuf {
+    unsigned short int sem_num;	/* semaphore number */
+    short int sem_op;		    /* semaphore operation */
+    short int sem_flg;		    /* operation flag */
+};
+
+
+// 创建一个新信号量集或获取一个既有集合的标识符
+// nsems: 信号量的数量.如果是创建，必须 >0；如果是获取，必须不大于集合的大小
+// 出错时返回-1
+int semget (key_t key, int nsems, int semflg);
+
+
+// 在一个信号量集或集合中的单个信号量上执行各种控制操作
+// semnum: 对于单个信号量操作，标志了具体的信号量，对于其他操作则忽略它
+// cmd: IPC_RMID，删除信号量及semid_ds
+//      IPC_STAT，在arg.buf指向的缓冲器中放置一份与这个信号量集相关联的semid_ds数据结构的副本
+//      IPC_SET，在arg.buf指向的缓冲器中放置一份与这个信号量集相关联的semid_ds数据结构的副本
+//      GETVAL，返回由semid指定的信号量集中第semnum个信号量的值，无需arg
+//      SETVAL，将由semid指定的信号量集中第semnum个信号量的值初始化为arg.val
+//      GETALL，获取由semid指向的信号量集中所有信号量的值并将它们放在arg.array指向的数组中。
+//      SETALL，使用arg.array指向的数组中的值初始化semid指向的集合中的所有信号量。忽略semnum
+//      GETPID，返回上一个在该信号量上执行semop()的进程 ID；称为sempid值。如果没有进程执行过semop()，那么就返回0
+//      GETNCNT，返回当前等待该信号量的值增长的进程数；这个值被称为semncnt值
+//      GETZCNT，返回当前等待该信号量的值变成0的进程数；这个值被称为semzcnt值
+// 出错时返回-1
+int semctl (int semid, int semnum, int cmd, ... /* arg */)；
+
+
+// 在semid标识的信号量集中的信号量上执行一个或多个操作
+// sops->sem_op: > 0，加到信号量值上
+//               = 0，如果等于0，那么操作将立即结束，否则semop()就会阻塞直到信号量值变成0为止
+//               < 0，信号量值减去它
+// 出错时返回-1
+int semop (int semid, struct sembuf *sops, size_t nsops);
+```
+
+#### 示例
+1. 基本使用
+```c
+#include <sys/types.h>
+#include <sys/sem.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main(void) {
+    int pid;
+    int semid = semget(IPC_PRIVATE, 10, S_IRUSR | S_IWUSR | IPC_CREAT);
+    if (semid < 0) {
+        printf("get error\n");
+        exit(1);
+    }
+
+    pid = fork();
+    if (pid == 0) {
+        printf("Always First\n");
+        struct sembuf b;
+        b.sem_num = 1;
+        b.sem_op = 1;
+        semop(semid, &b, 1);
+        exit(0);
+    } else {
+        struct sembuf b;
+        b.sem_num = 1;
+        b.sem_op = -1;
+        semop(semid, &b, 1);
+        printf("Always Second\n");
+    }
+
+    return 0;
+}
+```
 
 ## POSIX IPC
 ### POSIX IPC简介
