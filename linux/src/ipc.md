@@ -183,6 +183,83 @@ int main(void) {
 }
 ```
 
+### 共享内存
+#### API介绍
+```c
+#include <sys/types.h>
+#include <sys/shm.h>
+
+
+// 创建一个新的共享内存段，或打开一个既有的共享内存段
+// size: 内核以页面大小为单位对齐，若打开一个既有的段，size <= 既有段的大小，但不会产生任何效果
+// shmflg: SHM_HUGETLB
+//         SHM_NORESERVE
+// 出错时返回-1
+int shmget (key_t key, size_t size, int shmflg);
+
+
+// 将 shmid 标识的共享内存段附加到调用进程的虚拟地址空间中
+// shmaddr: == NULL，内存被设置到合适的位置（推荐做法，具有更好的可移植性）
+//          != NULL且没有设置SHM_RND
+//          != NULL且设置了SHM_RND
+// 出错时返回(void *)-1
+void *shmat (int shmid, const void *shmaddr, int shmflg);
+
+
+int shmdt (const void *shmaddr);
+
+
+int shmctl (int shmid, int cmd, struct shmid_ds *buf);
+```
+
+#### 示例
+1. 基本使用
+```c
+#include <sys/types.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
+int main(void) {
+    int pid;
+    int semid = semget(IPC_PRIVATE, 10, S_IRUSR | S_IWUSR | IPC_CREAT);
+    if (semid < 0) {
+        printf("semget error\n");
+        exit(1);
+    }
+    int shmid = shmget(IPC_PRIVATE, 1024, S_IRUSR | S_IWUSR | IPC_CREAT);
+    if (shmid < 0) {
+        printf("shmget error\n");
+        exit(1);
+    }
+
+    char *shmp = shmat(shmid, NULL, 0);
+
+    pid = fork();
+    if (pid == 0) {
+        struct sembuf b;
+        b.sem_num = 1;
+        b.sem_op = 1;
+        memcpy(shmp, "hello, world\n", 14);
+        semop(semid, &b, 1);
+    } else {
+        struct sembuf b;
+        b.sem_num = 1;
+        b.sem_op = -1;
+        semop(semid, &b, 1);
+        char buf[128];
+        memcpy(buf, shmp, 14);
+        printf("%s", buf);
+    }
+
+    return 0;
+}
+```
+
 ## POSIX IPC
 ### POSIX IPC简介
 
