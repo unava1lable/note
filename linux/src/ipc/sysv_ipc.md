@@ -1,8 +1,7 @@
-## System V IPC
-### System V IPC简介
+## System V IPC简介
 
-### 消息队列
-#### API介绍
+## 消息队列
+### API介绍
 ```c
 #include <sys/types.h>
 #include <sys/msg.h>
@@ -54,7 +53,7 @@ ssize_t msgrcv (int msqid, void *msgp, size_t msgsz, long int msgtyp, int msgflg
 int msgctl (int msqid, int cmd, struct msqid_ds *buf);
 ```
 
-#### 示例
+### 示例
 1. 基本使用
 ```c
 #include <sys/types.h>
@@ -89,8 +88,8 @@ int main(void) {
 }
 ```
 
-### 信号量
-#### API介绍
+## 信号量
+### API介绍
 ```c
 #include <sys/types.h>
 #include <sys/sem.h>
@@ -143,7 +142,7 @@ int semctl (int semid, int semnum, int cmd, ... /* arg */)；
 int semop (int semid, struct sembuf *sops, size_t nsops);
 ```
 
-#### 示例
+### 示例
 1. 基本使用
 ```c
 #include <sys/types.h>
@@ -181,8 +180,8 @@ int main(void) {
 }
 ```
 
-### 共享内存
-#### API介绍
+## 共享内存
+### API介绍
 ```c
 #include <sys/types.h>
 #include <sys/shm.h>
@@ -210,7 +209,7 @@ int shmdt (const void *shmaddr);
 int shmctl (int shmid, int cmd, struct shmid_ds *buf);
 ```
 
-#### 示例
+### 示例
 1. 基本使用
 ```c
 #include <sys/types.h>

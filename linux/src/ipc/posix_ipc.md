@@ -1,9 +1,7 @@
+## POSIX IPC简介
 
-## POSIX IPC
-### POSIX IPC简介
-
-### 消息队列
-#### API介绍
+## 消息队列
+### API介绍
 ```c
 typedef int mqd_t;
 
@@ -58,7 +56,7 @@ int mq_notify(mqd_t mqdes, const struct sigevent *notification);
 // 一个进程可以通过在调用mq_notify(mqdes, NULL)来撤销自己在消息通知上的注册信息
 ```
 
-#### 示例
+### 示例
 1. 基本使用
 ```c
 #include <stdio.h>
@@ -102,9 +100,9 @@ int main(void) {
     return 0;
 }
 ```
-### 信号量
+## 信号量
 POSIX信号量是一个不小于0的整数，如果一个进程试图将一个信号量的值减小到小于0，那么取决于所使用的函数，调用会阻塞或返回一个表明当前无法执行相应操作的错误。
-#### API介绍
+### API介绍
 ```c
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -164,7 +162,7 @@ int sem_init (sem_t *sem, int pshared, unsigned int value);
 // 出错时返回-1
 int sem_destroy (sem_t *sem);
 ```
-#### 示例
+### 示例
 1. 基本使用
 ```c
 #include <stdio.h>
@@ -201,13 +199,13 @@ int main(void) {
 }
 ```
 
-### 共享内存
+## 共享内存
 POSIX共享内存能够让无关进程共享一个映射区域而无需创建一个相应的映射文件。
 
 要使用共享内存需要：
 1. 使用`shm_open()`打开一个共享内存对象。
 2. 将上一步获取的文件描述符传入mmap()，并在其`flags`参数中指定`MAP_SHARED`。
-#### API介绍
+### API介绍
 ```c
 // 打开一个共享内存对象
 // 出错时返回-1
@@ -218,4 +216,4 @@ int shm_open (const char *name, int oflag, mode_t mode);
 // 出错时返回-1
 int shm_unlink (const char *name);
 ```
-#### 示例
+### 示例
